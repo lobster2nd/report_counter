@@ -1,6 +1,7 @@
 import flet as ft
+import openpyxl
 
-from table import create_table, modify_table
+from table import create_table, file_path, CELL_VALUES
 
 SCAN_CNT = 'Кол-во исследований'
 IMG_CNT = 'Кол-во снимков'
@@ -10,10 +11,39 @@ def main(page: ft.Page):
 
     create_table()
 
-    save_btn = ft.ElevatedButton('Сохранить')
+    def modify_table(e):
+        """Внесение изменений в таблицу"""
 
-    page.window_width = 650
-    page.window_height = 900
+        wb = openpyxl.load_workbook(file_path)
+        sheet = wb.active
+        for val in values:
+            section_name = val[0].value
+            scan_cnt_str = val[1].value
+            img_cnt_str = val[2].value
+
+            try:
+                scan_cnt = int(scan_cnt_str)
+                img_cnt = int(img_cnt_str)
+            except ValueError:
+                continue
+
+            for key, formula in CELL_VALUES.items():
+                if section_name in formula and 'области' not in formula:
+                    cell_b = sheet['B' + key[1:]]
+                    cell_c = sheet['C' + key[1:]]
+
+                    if cell_b.value is None:
+                        cell_b.value = 0
+                    if cell_c.value is None:
+                        cell_c.value = 0
+
+                    cell_b.value += scan_cnt
+                    cell_c.value += img_cnt
+
+        wb.save(file_path)
+
+    page.window.width = 650
+    page.window.height = 900
 
     header = ft.Text(value='Количество процедур по исследованиям')
 
@@ -65,7 +95,7 @@ def main(page: ft.Page):
     abdomen_scan_cnt = ft.TextField(label=SCAN_CNT)
     abdomen_img_cnt = ft.TextField(label=IMG_CNT)
 
-    values = [       # трансформировать в словарь
+    values = [
         [chest, chest_scan_cnt, chest_img_cnt],
         [limbs, limbs_scan_cnt, limbs_img_cnt],
         [pelvis, pelvis_scan_cnt, pelvis_img_cnt],
@@ -97,6 +127,10 @@ def main(page: ft.Page):
                 ], alignment=ft.MainAxisAlignment.CENTER
             )
         )
+
+    save_btn = ft.ElevatedButton('Сохранить',
+                                 on_click=modify_table
+                                 )
 
     page.add(ft.Row([save_btn], alignment=ft.MainAxisAlignment.CENTER))
 
