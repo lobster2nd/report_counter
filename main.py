@@ -1,10 +1,14 @@
 import flet as ft
 
-SCAN_CNT = 'Количество исследований'
-IMG_CNT = 'Количество снимков'
+SCAN_CNT = 'Кол-во исследований'
+IMG_CNT = 'Кол-во снимков'
 
 
 def main(page: ft.Page):
+
+    page.window_width = 650
+    page.window_height = 900
+
     header = ft.Text(value='Количество процедур по исследованиям')
 
     chest = ft.Text(value='ОГК')
@@ -13,7 +17,7 @@ def main(page: ft.Page):
 
     limbs = ft.Text(value='Конечности')
     limbs_scan_cnt = ft.TextField(value=SCAN_CNT)
-    limbs_img_cnt = ft.TextField(value=SCAN_CNT)
+    limbs_img_cnt = ft.TextField(value=IMG_CNT)
 
     pelvis = ft.Text(value='Таз и ТБС')
     pelvis_scan_cnt = ft.TextField(value=SCAN_CNT)
@@ -62,7 +66,7 @@ def main(page: ft.Page):
         [neck, neck_scan_cnt, neck_img_cnt],
         [gop, gop_scan_cnt, gop_img_cnt],
         [pkop, pkop_scan_cnt, pkop_img_cnt],
-        [ribs, ribs_img_cnt, ribs_scan_cnt],
+        [ribs, ribs_scan_cnt, ribs_img_cnt],
         [teeth, teeth_scan_cnt, teeth_img_cnt],
         [jaw, jaw_scan_cnt, jaw_img_cnt],
         [ppn, ppn_scan_cnt, ppn_img_cnt],
@@ -80,11 +84,16 @@ def main(page: ft.Page):
     for value in values:
         page.add(
             ft.Row(
-                value, alignment=ft.MainAxisAlignment.START
+                [
+                    ft.Column([value[0]], width=200),
+                    ft.Column([value[1]], width=200),
+                    ft.Column([value[2]], width=150)
+                ], alignment=ft.MainAxisAlignment.CENTER
             )
         )
 
-    page.add(ft.ElevatedButton('Сохранить'))
+    page.add(ft.Row([ft.ElevatedButton('Сохранить')],
+                    alignment=ft.MainAxisAlignment.CENTER))
 
 
 ft.app(target=main)
