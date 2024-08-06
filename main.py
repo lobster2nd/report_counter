@@ -8,8 +8,14 @@ from table import create_table, file_path, CELL_VALUES
 def main(page: ft.Page):
     page.window.width = 650
     page.window.height = 900
+    page.theme_mode = 'dark'
 
     create_table()
+
+    def change_theme(e):
+        """Светлая/тёмная тема"""
+        page.theme_mode = 'light' if page.theme_mode == 'dark' else 'dark'
+        page.update()
 
     def add_to_table_values(e):
         """Прибавить переданные значения к таблице"""
@@ -42,6 +48,14 @@ def main(page: ft.Page):
 
         wb.save(file_path)
 
+        for v in values:
+            v[1].value = None
+            v[2].value = None
+
+        page.snack_bar = ft.SnackBar(ft.Text('Сохранено'))
+        page.snack_bar.open = True
+        page.update()
+
     def rewrite_table_values(e):
         """Внести новые значения в таблицу, старые удаляются"""
 
@@ -73,6 +87,14 @@ def main(page: ft.Page):
 
         wb.save(file_path)
 
+        for v in values:
+            v[1].value = None
+            v[2].value = None
+
+        page.snack_bar = ft.SnackBar(ft.Text('Сохранено'))
+        page.snack_bar.open = True
+        page.update()
+
     page.add(
         ft.Row(
             [header], alignment=ft.MainAxisAlignment.CENTER,
@@ -96,8 +118,9 @@ def main(page: ft.Page):
     rewrite_btn = ft.ElevatedButton('Сохранить новые значения',
                                     on_click=rewrite_table_values
                                     )
+    dark_mode_btn = ft.IconButton(ft.icons.SUNNY, on_click=change_theme)
 
-    page.add(ft.Row([add_btn, rewrite_btn],
+    page.add(ft.Row([dark_mode_btn, add_btn, rewrite_btn],
                     alignment=ft.MainAxisAlignment.CENTER))
 
 
