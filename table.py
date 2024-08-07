@@ -3,6 +3,9 @@ from datetime import datetime
 
 import openpyxl
 from openpyxl.styles import Alignment
+import flet as ft
+
+from fields import values
 
 file_path = 'отчёт.xlsx'
 
@@ -37,6 +40,14 @@ CELL_VALUES = {
         }
 
 
+def clear_fields(e, page):
+    """Очистить поля"""
+    for v in values:
+        v[1].value = None
+        v[2].value = None
+    page.update()
+
+
 def create_table():
     """Создаёт шаблон таблицы отчёта"""
     if not os.path.exists(file_path):
@@ -63,5 +74,55 @@ def create_table():
         wb.save(file_path)
 
 
+def update_table_values(action):
+    """Обновляет или перезаписывает значения в таблице"""
+
+    wb = openpyxl.load_workbook(file_path)
+    sheet = wb.active
+
+    for val in values:
+        section_name = val[0].value
+        scan_cnt_str = val[1].value
+        img_cnt_str = val[2].value
+
+        try:
+            scan_cnt = int(scan_cnt_str)
+            img_cnt = int(img_cnt_str)
+        except ValueError:
+            continue
+
+        for key, formula in CELL_VALUES.items():
+            if section_name in formula and 'области' not in formula:
+                cell_b = sheet['B' + key[1:]]
+                cell_c = sheet['C' + key[1:]]
+
+                if action == 'add':
+                    cell_b.value += scan_cnt
+                    cell_c.value += img_cnt
+                elif action == 'rewrite':
+                    cell_b.value = scan_cnt
+                    cell_c.value = img_cnt
+
+    wb.save(file_path)
+
+    for v in values:
+        v[1].value = None
+        v[2].value = None
 
 
+def add_to_table_values(e, page):
+    """Прибавить переданные значения к таблице"""
+    page.snack_bar = ft.SnackBar(ft.Text('Сохранено'))
+    page.snack_bar.open = True
+
+    update_table_values(action='add')
+    page.update()
+
+
+def rewrite_table_values(e, page):
+    """Внести новые значения в таблицу, старые удаляются"""
+    page.snack_bar = ft.SnackBar(ft.Text('Сохранено'))
+    page.snack_bar.open = True
+
+    update_table_values(action='rewrite')
+    page.update()
