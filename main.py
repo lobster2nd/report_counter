@@ -1,7 +1,8 @@
 import flet as ft
 
 from fields import header, values
-from utils import create_table, add_to_table_values, rewrite_table_values, \
+from tables import create_table
+from utils import add_to_table_values, rewrite_table_values, \
     clear_fields
 
 

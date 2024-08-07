@@ -1,83 +1,16 @@
-import os
-from datetime import datetime
-
 import openpyxl
-from openpyxl.styles import Alignment, Font, Border, Side
 import flet as ft
 
 from fields import values
-
-file_path = 'отчёт.xlsx'
-
-CELL_VALUES = {
-            'A1': 'Количество процедур по исследованиям',
-            'A5': 'Наименование',
-            'A6': 'Всего',
-            'A7': 'ОГК',
-            'A8': 'Костно-мышечной системы',
-            'A9': 'Конечности',
-            'A10': 'Таза и тазобедренных суставов',
-            'A11': 'Шейные позвонки',
-            'A12': 'Грудные позвонки',
-            'A13': 'Поясничные позвонки',
-            'A14': 'Рёбра и грудина',
-            'A15': 'Черепа и челюстно-лицевой области',
-            'A16': 'Зубы',
-            'A17': 'Челюстей',
-            'A18': 'Околоносовых пазух',
-            'A19': 'Череп',
-            'A20': 'Брюшная полость',
-            'A22': 'Сохранено: ',
-            'B5': 'Всего исследований',
-            'C5': 'Всего снимков',
-            'B6': '=B7 + B8 + B15',
-            'C6': '=C7 + C8 + C15',
-            'B8': '=SUM(B9:B14)',
-            'C8': '=SUM(C9:C14)',
-            'B15': '=SUM(B16:B19)',
-            'C15': '=SUM(C16:C19)',
-            'B22': f'{datetime.now().strftime("%d-%m-%y %H:%M")}'
-        }
+from tables import file_path, CELL_VALUES
 
 
 def clear_fields(e, page):
     """Очистить поля"""
     for v in values:
-        v[1].value = None
-        v[2].value = None
+        v[1].value = ''
+        v[2].value = ''
     page.update()
-
-
-def create_table():
-    """Создаёт шаблон таблицы отчёта"""
-    if not os.path.exists(file_path):
-        wb = openpyxl.Workbook()
-        sheet = wb.active
-        sheet.column_dimensions['A'].width = 40
-        sheet.column_dimensions['B'].width = 20
-        sheet.column_dimensions['C'].width = 20
-
-        for cell, formula in CELL_VALUES.items():
-            sheet[cell].value = formula
-
-        thin_border = Border(left=Side(style='thin'), right=Side(style='thin'),
-                             top=Side(style='thin'), bottom=Side(style='thin'))
-
-        for row in sheet.iter_rows(min_row=5, max_row=20, min_col=1,
-                                   max_col=3):
-            for cell in row:
-                cell.border = thin_border
-                if cell.value is None:
-                    cell.value = 0
-                if cell.row in [6, 8, 15, 20]:
-                    cell.font = Font(bold=True)
-
-        for col in ['B', 'C']:
-            for cell in sheet[col]:
-                cell.alignment = Alignment(horizontal='center',
-                                           vertical='center')
-
-        wb.save(file_path)
 
 
 def update_table_values(action):
@@ -102,18 +35,22 @@ def update_table_values(action):
                 cell_b = sheet['B' + key[1:]]
                 cell_c = sheet['C' + key[1:]]
 
-                if action == 'add':
-                    cell_b.value += scan_cnt
-                    cell_c.value += img_cnt
-                elif action == 'rewrite':
-                    cell_b.value = scan_cnt
-                    cell_c.value = img_cnt
+                if cell_b.value is None: cell_b.value = 0
+                if cell_c.value is None: cell_c.value = 0
+
+                match action:
+                    case 'add':
+                        cell_b.value += scan_cnt
+                        cell_c.value += img_cnt
+                    case 'rewrite':
+                        cell_b.value = scan_cnt
+                        cell_c.value = img_cnt
 
     wb.save(file_path)
 
     for v in values:
-        v[1].value = None
-        v[2].value = None
+        v[1].value = ''
+        v[2].value = ''
 
 
 def add_to_table_values(e, page):
