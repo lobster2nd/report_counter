@@ -2,7 +2,7 @@ import os
 from datetime import datetime
 
 import openpyxl
-from openpyxl.styles import Alignment
+from openpyxl.styles import Alignment, Font, Border, Side
 import flet as ft
 
 from fields import values
@@ -34,8 +34,8 @@ CELL_VALUES = {
             'C6': '=C7 + C8 + C15',
             'B8': '=SUM(B9:B14)',
             'C8': '=SUM(C9:C14)',
-            'B15': '=SUM(B16:B20)',
-            'C15': '=SUM(C16:C20)',
+            'B15': '=SUM(B16:B19)',
+            'C15': '=SUM(C16:C19)',
             'B22': f'{datetime.now().strftime("%d-%m-%y %H:%M")}'
         }
 
@@ -60,11 +60,17 @@ def create_table():
         for cell, formula in CELL_VALUES.items():
             sheet[cell].value = formula
 
-        for row in sheet.iter_rows(min_row=5, max_row=20, min_col=2,
+        thin_border = Border(left=Side(style='thin'), right=Side(style='thin'),
+                             top=Side(style='thin'), bottom=Side(style='thin'))
+
+        for row in sheet.iter_rows(min_row=5, max_row=20, min_col=1,
                                    max_col=3):
             for cell in row:
+                cell.border = thin_border
                 if cell.value is None:
                     cell.value = 0
+                if cell.row in [6, 8, 15, 20]:
+                    cell.font = Font(bold=True)
 
         for col in ['B', 'C']:
             for cell in sheet[col]:
