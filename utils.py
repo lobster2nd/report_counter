@@ -13,11 +13,18 @@ def clear_fields(e, page):
     page.update()
 
 
-def update_table_values(action):
+def update_table_values(action, month):
     """Обновляет или перезаписывает значения в таблице"""
 
     wb = openpyxl.load_workbook(file_path)
     sheet = wb.active
+
+    start = 0
+
+    for key, formula in CELL_VALUES.items():
+        if formula == month:
+            start = int(key[1:]) + 4
+            break
 
     for val in values:
         section_name = val[0].value
@@ -31,7 +38,9 @@ def update_table_values(action):
             continue
 
         for key, formula in CELL_VALUES.items():
-            if section_name in formula and 'области' not in formula:
+            if section_name in formula \
+                    and 'области' not in formula \
+                    and start <= int(key[1:]) <= start + 13:
                 cell_b = sheet['B' + key[1:]]
                 cell_c = sheet['C' + key[1:]]
 
@@ -53,19 +62,18 @@ def update_table_values(action):
         v[2].value = ''
 
 
-def add_to_table_values(e, page):
+def add_to_table_values(e, page, month):
     """Прибавить переданные значения к таблице"""
     page.snack_bar = ft.SnackBar(ft.Text('Сохранено'))
     page.snack_bar.open = True
-
-    update_table_values(action='add')
+    update_table_values(action='add', month=month)
     page.update()
 
 
-def rewrite_table_values(e, page):
+def rewrite_table_values(e, page, month):
     """Внести новые значения в таблицу, старые удаляются"""
     page.snack_bar = ft.SnackBar(ft.Text('Сохранено'))
     page.snack_bar.open = True
 
-    update_table_values(action='rewrite')
+    update_table_values(action='rewrite', month=month)
     page.update()

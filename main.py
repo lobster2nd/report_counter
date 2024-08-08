@@ -19,10 +19,12 @@ def main(page: ft.Page):
         page.update()
 
     add_btn = ft.ElevatedButton('Прибавить',
-                                on_click=lambda e: add_to_table_values(e, page)
+                                on_click=lambda e: add_to_table_values(e, page,
+                                                    month=month_dropdown.value)
                                 )
     rewrite_btn = ft.ElevatedButton('Сохранить новые значения',
-                                    on_click=lambda e: rewrite_table_values(e, page)
+                                    on_click=lambda e: rewrite_table_values(e,
+                                              page, month=month_dropdown.value)
                                     )
     clear_page_btn = ft.ElevatedButton(text='Очистить',
                                        on_click=lambda e: clear_fields(e, page)
