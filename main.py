@@ -29,9 +29,35 @@ def main(page: ft.Page):
                                        )
     dark_mode_btn = ft.IconButton(ft.icons.SUNNY, on_click=change_theme)
 
+    month_dropdown = ft.Dropdown(
+        label='Месяц',
+        hint_text='Выбрать месяц',
+        options=[
+            ft.dropdown.Option('Январь'),
+            ft.dropdown.Option('Февраль'),
+            ft.dropdown.Option('Март'),
+            ft.dropdown.Option('Апрель'),
+            ft.dropdown.Option('Май'),
+            ft.dropdown.Option('Июнь'),
+            ft.dropdown.Option('Июль'),
+            ft.dropdown.Option('Август'),
+            ft.dropdown.Option('Сентябрь'),
+            ft.dropdown.Option('Октябрь'),
+            ft.dropdown.Option('Ноябрь'),
+            ft.dropdown.Option('Декабрь'),
+        ],
+        autofocus=False
+    )
+
     page.add(
         ft.Row(
             [header], alignment=ft.MainAxisAlignment.CENTER,
+        )
+    )
+
+    page.add(
+        ft.Row(
+            [month_dropdown], alignment=ft.MainAxisAlignment.CENTER
         )
     )
 

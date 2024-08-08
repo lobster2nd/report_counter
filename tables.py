@@ -35,7 +35,7 @@ TOTAL_TABLE_VALUES = {    # Дописать формулы заполнения
     'B22': f'{datetime.now().strftime("%d-%m-%y %H:%M")}'
 }
 
-file_path = 'отчёт.xlsx'
+file_path = f'Отчёт_по_исследованиям_{datetime.now().year}_год.xlsx'
 
 
 def create_month_template(month_name, start_row):
