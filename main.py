@@ -7,6 +7,8 @@ from utils import add_to_table_values, rewrite_table_values, \
 
 
 def main(page: ft.Page):
+    page.title = 'Количество процедур по исследованиям'
+    page.icon = ft.icons.WORK
     page.window.width = 650
     page.window.height = 900
     page.theme_mode = 'dark'
@@ -49,12 +51,6 @@ def main(page: ft.Page):
             ft.dropdown.Option('Декабрь'),
         ],
         autofocus=False
-    )
-
-    page.add(
-        ft.Row(
-            [header], alignment=ft.MainAxisAlignment.CENTER,
-        )
     )
 
     page.add(
