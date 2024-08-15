@@ -2,7 +2,10 @@
 
 ## Стек технологий  
 
-![Static Badge](https://img.shields.io/badge/python-white?style=for-the-badge&logo=python&logoColor=%233776AB&labelColor=%23ebe3ce&color=%233776AB)  
+![PyPI - Python Version](https://img.shields.io/pypi/pyversions/Django) 
+  ![PyPI - Version](https://img.shields.io/pypi/v/Flet?label=Flet) ![PyPI - Version](https://img.shields.io/pypi/v/openpyxl?label=openpyxl)
+
+
 
 
 ## Установка проекта локально (Linux)  
