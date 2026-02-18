@@ -1,147 +1,285 @@
 import os
 from datetime import datetime
-
 import openpyxl
-from openpyxl.styles import Border, Side, Font, Alignment
+from openpyxl.styles import Border, Side, Font, Alignment, PatternFill
+from openpyxl.utils import get_column_letter
+from fields import values
 
+RESEARCH_TYPES = [v[0].value for v in values]
 
-TOTAL_TABLE_VALUES = {
-    'A1': 'Количество процедур по исследованиям',
-    'B1': f'{datetime.now().year} год',
-    'A3': 'Наименование',
-    'A4': 'Всего',
-    'B4': '=B26+B48+B70+B92+B114+B136+B158+B180+B202+B224+B246+B268',
-    'C4': '=C26+C48+C70+C92+C114+C136+C158+C180+C202+C224+C246+C268',
-    'A5': 'ОГК',
-    'B5': '=B27+B49+B71+B93+B115+B137+B159+B181+B203+B225+B247+B269',
-    'C5': '=C27+C49+C71+C93+C115+C137+C159+C181+C203+C225+C247+C269',
-    'A6': 'Костно-мышечной системы',
-    'B6': '=SUM(B7:B12)',
-    'C6': '=SUM(C7:C12)',
-    'A7': 'Конечности',
-    'B7': '=B29+B51+B73+B95+B117+B139+B161+B183+B205+B227+B249+B271',
-    'C7': '=C29+C51+C73+C95+C117+C139+C161+C183+C205+C227+C249+C271',
-    'A8': 'Таза и тазобедренных суставов',
-    'B8': '=B30+B52+B74+B96+B118+B140+B162+B184+B206+B228+B250+B272',
-    'C8': '=C30+C52+C74+C96+C118+C140+C162+C184+C206+C228+C250+C272',
-    'A9': 'Шейные позвонки',
-    'B9': '=B31+B53+B75+B97+B119+B141+B163+B185+B207+B229+B251+B273',
-    'C9': '=C31+C53+C75+C97+C119+C141+C163+C185+C207+C229+C251+C273',
-    'A10': 'Грудные позвонки',
-    'B10': '=B32+B54+B76+B98+B120+B142+B164+B186+B208+B230+B252+B274',
-    'C10': '=C32+C54+C76+C98+C120+C142+C164+C186+C208+C230+C252+C274',
-    'A11': 'Поясничные позвонки',
-    'B11': '=B33+B55+B77+B99+B121+B143+B165+B187+B209+B231+B253+B275',
-    'C11': '=C33+C55+C77+C99+C121+C143+C165+C187+C209+C231+C253+C275',
-    'A12': 'Рёбра и грудина',
-    'B12': '=B34+B56+B78+B100+B122+B144+B166+B188+B210+B232+B254+B276',
-    'C12': '=C34+C56+C78+C100+C122+C144+C166+C188+C210+C232+C254+C276',
-    'A13': 'Черепа и челюстно-лицевой области',
-    'B13': '=SUM(B14:B17)',
-    'C13': '=SUM(C14:C17)',
-    'A14': 'Зубы',
-    'B14': '=B36+B58+B80+B102+B124+B146+B168+B190+B212+B234+B256+B278',
-    'C14': '=C36+C58+C80+C102+C124+C146+C168+C190+C212+C234+C256+C278',
-    'A15': 'Челюстей',
-    'B15': '=B37+B59+B81+B103+B125+B147+B169+B191+B213+B235+B257+B279',
-    'C15': '=C37+C59+C81+C103+C125+C147+C169+C191+C213+C235+C257+C279',
-    'A16': 'Околоносовых пазух',
-    'B16': '=B38+B60+B82+B104+B126+B148+B170+B192+B214+B236+B258+B280',
-    'C16': '=C38+C60+C82+C104+C126+C148+C170+C192+C214+C236+C258+C280',
-    'A17': 'Череп',
-    'B17': '=B39+B61+B83+B105+B127+B149+B171+B193+B215+B237+B259+B281',
-    'C17': '=C39+C61+C83+C105+C127+C149+C171+C193+C215+C237+C259+C281',
-    'A18': 'Брюшная полость',
-    'B18': '=B40+B62+B84+B106+B128+B150+B172+B194+B216+B238+B260+B282',
-    'C18': '=C40+C62+C84+C106+C128+C150+C172+C194+C216+C238+C260+C282',
-    'A20': 'Сохранено: ',
-    'B3': 'Всего исследований',
-    'C3': 'Всего снимков',
-    'B20': f'{datetime.now().strftime("%d-%m-%y %H:%M")}'
+COLUMN_CONFIG = {
+    'A': {'name': 'Дата', 'width': 18, 'type': 'date'},
 }
 
-file_path = f'Отчёт_по_исследованиям_{datetime.now().year}_год.xlsx'
+# Начинаем с индекса 1, так как колонка A уже занята
+col_index = 1
+RESEARCH_COL_MAP = {}
 
+for research_name in RESEARCH_TYPES:
+    # Правильный расчет индексов колонок
+    scan_col = get_column_letter(
+        col_index + 1)  # +1 потому что начинаем со следующей после A
+    img_col = get_column_letter(col_index + 2)
 
-def create_month_template(month_name, start_row):
-    """Возвращает шаблон таблицы на месяц"""
-    return {
-        f'A{start_row + 22}': month_name,
-        f'A{start_row + 24}': 'Наименование',
-        f'A{start_row + 25}': 'Всего',
-        f'A{start_row + 26}': 'ОГК',
-        f'A{start_row + 27}': 'Костно-мышечной системы',
-        f'A{start_row + 28}': 'Конечности',
-        f'A{start_row + 29}': 'Таза и тазобедренных суставов',
-        f'A{start_row + 30}': 'Шейные позвонки',
-        f'A{start_row + 31}': 'Грудные позвонки',
-        f'A{start_row + 32}': 'Поясничные позвонки',
-        f'A{start_row + 33}': 'Рёбра и грудина',
-        f'A{start_row + 34}': 'Черепа и челюстно-лицевой области',
-        f'A{start_row + 35}': 'Зубы',
-        f'A{start_row + 36}': 'Челюстей',
-        f'A{start_row + 37}': 'Околоносовых пазух',
-        f'A{start_row + 38}': 'Череп',
-        f'A{start_row + 39}': 'Брюшная полость',
-        f'A{start_row + 41}': 'Сохранено: ',
-        f'B{start_row + 24}': 'Всего исследований',
-        f'C{start_row + 24}': 'Всего снимков',
-        f'B{start_row + 25}': f'=B{start_row + 26} + B{start_row + 27} + B{start_row + 34} + B{start_row + 39}',
-        f'C{start_row + 25}': f'=C{start_row + 26} + C{start_row + 27} + C{start_row + 34} + C{start_row + 39}',
-        f'B{start_row + 27}': f'=SUM(B{start_row + 28}:B{start_row + 33})',
-        f'C{start_row + 27}': f'=SUM(C{start_row + 28}:C{start_row + 33})',
-        f'B{start_row + 34}': f'=SUM(B{start_row + 35}:B{start_row + 38})',
-        f'C{start_row + 34}': f'=SUM(C{start_row + 35}:C{start_row + 38})',
-        f'B{start_row + 41}': f'{datetime.now().strftime("%d-%m-%y %H:%M")}'
+    COLUMN_CONFIG[scan_col] = {
+        'name': research_name,
+        'width': 10,
+        'type': 'scan',
+        'group': research_name
+    }
+    COLUMN_CONFIG[img_col] = {
+        'name': research_name,
+        'width': 10,
+        'type': 'img',
+        'group': research_name
     }
 
+    RESEARCH_COL_MAP[research_name] = (scan_col, img_col)
+    col_index += 2  # Увеличиваем на 2 для следующей пары колонок
 
-months = ['Январь', 'Февраль', 'Март', 'Апрель', 'Май', 'Июнь', 'Июль', 'Август', 'Сентябрь', 'Октябрь', 'Ноябрь', 'Декабрь']
-CELL_VALUES = {}
-start_from_row = 1
+# Колонки для итогов
+TOTAL_SCAN_COL = get_column_letter(col_index + 1)
+TOTAL_IMG_COL = get_column_letter(col_index + 2)
 
-for i in months:
-    CELL_VALUES.update(create_month_template(i, start_from_row))
-    start_from_row += 22
+COLUMN_CONFIG[TOTAL_SCAN_COL] = {
+    'name': 'Итого',
+    'width': 12,
+    'type': 'total_scan',
+    'group': 'Итого'
+}
+COLUMN_CONFIG[TOTAL_IMG_COL] = {
+    'name': 'Итого',
+    'width': 12,
+    'type': 'total_img',
+    'group': 'Итого'
+}
+
+MONTHS = [
+    'Январь', 'Февраль', 'Март', 'Апрель', 'Май', 'Июнь',
+    'Июль', 'Август', 'Сентябрь', 'Октябрь', 'Ноябрь', 'Декабрь'
+]
 
 
-def create_table():
-    """Создаёт шаблон таблицы отчёта"""
-    if not os.path.exists(file_path):
+def get_days_in_month(year: int, month_num: int) -> int:
+    month_days = {
+        1: 31, 2: 28, 3: 31, 4: 30, 5: 31, 6: 30,
+        7: 31, 8: 31, 9: 30, 10: 31, 11: 30, 12: 31
+    }
+
+    if month_num == 2:
+        if (year % 4 == 0 and year % 100 != 0) or (year % 400 == 0):
+            return 29
+
+    return month_days.get(month_num, 30)
+
+
+def get_month_sheet_name(year: int, month: str) -> str:
+    return f"{month}_{year}"
+
+
+def get_year_file_path(year: int) -> str:
+    return f'Отчёт_по_исследованиям_{year}_год.xlsx'
+
+
+def get_column_index(col_letter: str) -> int:
+    result = 0
+    for char in col_letter:
+        result = result * 26 + (ord(char) - ord('A') + 1)
+    return result
+
+
+def create_month_sheet(wb, year: int, month: str, month_num: int):
+    sheet_name = get_month_sheet_name(year, month)
+
+    if sheet_name in wb.sheetnames:
+        return wb[sheet_name]
+
+    sheet = wb.create_sheet(sheet_name)
+
+    # Устанавливаем ширину колонок
+    for col, config in COLUMN_CONFIG.items():
+        sheet.column_dimensions[col].width = config['width']
+
+    # Стили
+    header_font = Font(bold=True, size=11)
+    header_fill = PatternFill(start_color='4472C4', end_color='4472C4',
+                              fill_type='solid')
+    header_alignment = Alignment(horizontal='center', vertical='center',
+                                 wrap_text=True)
+
+    subheader_font = Font(bold=True, size=10)
+    subheader_fill = PatternFill(start_color='5B9BD5', end_color='5B9BD5',
+                                 fill_type='solid')
+
+    thin_border = Border(
+        left=Side(style='thin'),
+        right=Side(style='thin'),
+        top=Side(style='thin'),
+        bottom=Side(style='thin')
+    )
+    thick_border = Border(
+        left=Side(style='thin'),
+        right=Side(style='thin'),
+        top=Side(style='thick'),
+        bottom=Side(style='thin')
+    )
+
+    # Сортируем колонки для правильного отображения
+    sorted_cols = sorted(COLUMN_CONFIG.keys(), key=get_column_index)
+
+    # Сначала заполняем все ячейки значениями
+    # Заполняем первую строку
+    for col in sorted_cols:
+        config = COLUMN_CONFIG[col]
+        cell = sheet[f'{col}1']
+
+        if config['type'] == 'date':
+            cell.value = 'Дата'
+        elif config['type'] in ['scan', 'img']:
+            cell.value = config['group']
+        elif config['type'] in ['total_scan', 'total_img']:
+            if config['type'] == 'total_scan':
+                cell.value = 'Итого за день'
+
+        # Применяем стили к ячейке
+        if cell.value:
+            cell.font = header_font
+            cell.fill = header_fill
+            cell.alignment = header_alignment
+            cell.border = thin_border
+
+    # Заполняем вторую строку
+    for col, config in COLUMN_CONFIG.items():
+        cell = sheet[f'{col}2']
+
+        if config['type'] == 'date':
+            cell.value = ''
+        elif config['type'] == 'scan':
+            cell.value = 'иссл.'
+        elif config['type'] == 'img':
+            cell.value = 'снимки'
+        elif config['type'] == 'total_scan':
+            cell.value = 'иссл.'
+        elif config['type'] == 'total_img':
+            cell.value = 'снимки'
+
+        # Применяем стили ко второй строке
+        if config['type'] != 'date':
+            cell.font = subheader_font
+            cell.fill = subheader_fill
+            cell.alignment = header_alignment
+            cell.border = thin_border
+        else:
+            cell.border = thin_border
+
+    # Теперь объединяем ячейки
+    # Объединяем ячейки даты (A1:A2)
+    sheet.merge_cells('A1:A2')
+
+    # Объединяем ячейки групп исследований
+    groups = {}
+    for col in sorted_cols:
+        config = COLUMN_CONFIG[col]
+        if config['type'] in ['scan', 'img']:
+            if config['group'] not in groups:
+                groups[config['group']] = []
+            groups[config['group']].append(col)
+
+    for group_name, cols in groups.items():
+        if cols and len(cols) > 1:
+            start_col = cols[0]
+            end_col = cols[-1]
+            sheet.merge_cells(f'{start_col}1:{end_col}1')
+
+    # Объединяем итоговые ячейки
+    sheet.merge_cells(f'{TOTAL_SCAN_COL}1:{TOTAL_IMG_COL}1')
+
+    # Заполняем дни месяца
+    days_in_month = get_days_in_month(year, month_num)
+    scan_cols = [col for col, cfg in COLUMN_CONFIG.items() if
+                 cfg.get('type') == 'scan']
+    img_cols = [col for col, cfg in COLUMN_CONFIG.items() if
+                cfg.get('type') == 'img']
+
+    for day in range(1, days_in_month + 1):
+        row = day + 2
+
+        # Дата
+        date_cell = sheet[f'A{row}']
+        date_cell.value = f'{day:02d}.{month_num:02d}.{year}'
+        date_cell.border = thin_border
+        date_cell.alignment = Alignment(horizontal='center', vertical='center')
+
+        # Применяем границы ко всем ячейкам строки
+        for col in COLUMN_CONFIG.keys():
+            cell = sheet[f'{col}{row}']
+            cell.border = thin_border
+            cell.alignment = Alignment(horizontal='center', vertical='center')
+
+        # Формулы для итогов
+        if scan_cols:
+            scan_formula = f'=SUM({",".join([f"{col}{row}" for col in scan_cols])})'
+            sheet[f'{TOTAL_SCAN_COL}{row}'].value = scan_formula
+        if img_cols:
+            img_formula = f'=SUM({",".join([f"{col}{row}" for col in img_cols])})'
+            sheet[f'{TOTAL_IMG_COL}{row}'].value = img_formula
+
+    # Добавляем строку с итогами за месяц
+    total_row = days_in_month + 4
+
+    # Толстая граница перед итогами
+    for col in COLUMN_CONFIG.keys():
+        if col != 'A':  # Не применяем толстую границу к колонке с датами
+            sheet[f'{col}{total_row - 1}'].border = thick_border
+
+    # Заголовок итоговой строки
+    sheet[f'A{total_row}'].value = 'Итого за месяц:'
+    sheet[f'A{total_row}'].font = Font(bold=True)
+    sheet[f'A{total_row}'].alignment = Alignment(horizontal='right')
+    sheet[f'A{total_row}'].border = thick_border
+
+    sheet.row_dimensions[total_row].height = 20
+
+    # Формулы для итогов за месяц
+    for col in COLUMN_CONFIG.keys():
+        if col in [TOTAL_SCAN_COL, TOTAL_IMG_COL]:
+            formula = f'=SUM({col}3:{col}{days_in_month + 2})'
+            sheet[f'{col}{total_row}'].value = formula
+            sheet[f'{col}{total_row}'].font = Font(bold=True)
+            sheet[f'{col}{total_row}'].fill = PatternFill(start_color='FFC000',
+                                                          end_color='FFC000',
+                                                          fill_type='solid')
+        elif col != 'A':
+            formula = f'=SUM({col}3:{col}{days_in_month + 2})'
+            sheet[f'{col}{total_row}'].value = formula
+            sheet[f'{col}{total_row}'].font = Font(bold=True)
+
+        cell = sheet[f'{col}{total_row}']
+        cell.border = thick_border
+        cell.alignment = Alignment(horizontal='center', vertical='center')
+
+    # Закрепляем первые две строки
+    sheet.freeze_panes = 'A3'
+
+    return sheet
+
+
+def create_table(year: int = None):
+    if year is None:
+        year = datetime.now().year
+
+    file_path = get_year_file_path(year)
+
+    if os.path.exists(file_path):
+        wb = openpyxl.load_workbook(file_path)
+    else:
         wb = openpyxl.Workbook()
-        sheet = wb.active
-        sheet.column_dimensions['A'].width = 40
-        sheet.column_dimensions['B'].width = 20
-        sheet.column_dimensions['C'].width = 20
+        if 'Sheet' in wb.sheetnames:
+            del wb['Sheet']
 
-        for cell, formula in {**CELL_VALUES, **TOTAL_TABLE_VALUES}.items():
-            sheet[cell].value = formula
+    for month_num, month_name in enumerate(MONTHS, start=1):
+        create_month_sheet(wb, year, month_name, month_num)
 
-        thin_border = Border(left=Side(style='thin'), right=Side(style='thin'),
-                             top=Side(style='thin'), bottom=Side(style='thin'))
-
-        skip_rows = []
-        for start in range(19, 262, 22):
-            skip_rows += list(range(start, start + 6))
-
-        bold_rows = months + ['Всего', 'Костно-мышечной системы',
-                              'Черепа и челюстно-лицевой области',
-                              'Брюшная полость']
-
-        for row in sheet.iter_rows(min_row=3, max_row=282,
-                                   min_col=1, max_col=3):
-            for cell in row:
-                if row[0].value in bold_rows:
-                    cell.font = Font(bold=True)
-                if row[0].row in skip_rows:
-                    continue
-                cell.border = thin_border
-                if cell.value is None:
-                    cell.value = 0
-
-        for col in ['B', 'C']:
-            for cell in sheet[col]:
-                cell.alignment = Alignment(horizontal='center',
-                                           vertical='center')
-
-        wb.save(file_path)
+    wb.save(file_path)
+    print(f"✅ Файл журнала создан: {file_path}")
+    return file_path

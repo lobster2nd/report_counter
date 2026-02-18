@@ -1,10 +1,14 @@
 from datetime import datetime
-
 import flet as ft
 import openpyxl
-
 from fields import values
-from tables import months, file_path, CELL_VALUES
+from tables import (
+    MONTHS,
+    get_year_file_path,
+    get_month_sheet_name,
+    create_month_sheet,
+    RESEARCH_COL_MAP
+)
 
 
 def show_info(info, page):
@@ -14,24 +18,23 @@ def show_info(info, page):
 
 
 def clear_fields(e, page):
-    """Очистить поля"""
     for v in values:
         v[1].value = ''
         v[2].value = ''
     page.update()
 
 
-def get_month_from_date(date_str):
-    """Извлекает название месяца из строки даты (дд.мм.гггг)"""
+def get_month_year_from_date(date_str):
     try:
         if not date_str:
-            return None
+            return None, None
         date_obj = datetime.strptime(date_str, '%d.%m.%Y')
-        month_num = date_obj.month - 1  # 0-indexed
-        return months[month_num]
+        month_num = date_obj.month
+        year = date_obj.year
+        return month_num, year
     except (ValueError, IndexError) as e:
         print(f"Ошибка преобразования даты: {e}")
-        return None
+        return None, None
 
 
 def validate_data(date_str, page):
@@ -39,8 +42,8 @@ def validate_data(date_str, page):
         show_info('Выберите дату', page)
         return False
 
-    month = get_month_from_date(date_str)
-    if not month:
+    month_num, year = get_month_year_from_date(date_str)
+    if not month_num:
         show_info('Некорректный формат даты', page)
         return False
 
@@ -63,65 +66,63 @@ def validate_data(date_str, page):
     return True
 
 
-def update_table_values(action, month):
-    """Обновляет значения в таблице"""
-    wb = openpyxl.load_workbook(file_path)
-    sheet = wb.active
+def find_row_by_date(sheet, date_str):
+    for row in range(3, 35):
+        cell_value = sheet[f'A{row}'].value
+        if cell_value and date_str == str(cell_value):
+            return row
+    return None
 
-    start = 0
 
-    for key, formula in CELL_VALUES.items():
-        if formula == month:
-            start = int(key[1:]) + 4
-            break
+def save_to_journal(date_str, page):
+    month_num, year = get_month_year_from_date(date_str)
+    if not month_num:
+        show_info('Ошибка определения месяца', page)
+        return
+
+    month_name = MONTHS[month_num - 1]
+    file_path = get_year_file_path(year)
+    sheet_name = get_month_sheet_name(year, month_name)
+
+    try:
+        wb = openpyxl.load_workbook(file_path)
+    except FileNotFoundError:
+        from tables import create_table
+        create_table(year)
+        wb = openpyxl.load_workbook(file_path)
+
+    if sheet_name not in wb.sheetnames:
+        create_month_sheet(wb, year, month_name, month_num)
+
+    sheet = wb[sheet_name]
+    row = find_row_by_date(sheet, date_str)
+
+    if not row:
+        show_info(f'Дата {date_str} не найдена в журнале', page)
+        return
 
     for val in values:
         section_name = val[0].value
         scan_cnt_str = val[1].value
         img_cnt_str = val[2].value
 
-        try:
-            scan_cnt = int(scan_cnt_str) if scan_cnt_str else 0
-            img_cnt = int(img_cnt_str) if img_cnt_str else 0
-        except ValueError:
+        if not scan_cnt_str or not img_cnt_str:
             continue
 
-        for key, formula in CELL_VALUES.items():
-            if section_name in formula \
-                    and 'области' not in formula \
-                    and start <= int(key[1:]) <= start + 13:
-                cell_b = sheet['B' + key[1:]]
-                cell_c = sheet['C' + key[1:]]
+        scan_cnt = int(scan_cnt_str)
+        img_cnt = int(img_cnt_str)
 
-                if cell_b.value is None:
-                    cell_b.value = 0
-                if cell_c.value is None:
-                    cell_c.value = 0
-
-                if action == 'add':
-                    cell_b.value += scan_cnt
-                    cell_c.value += img_cnt
-                elif action == 'rewrite':
-                    cell_b.value = scan_cnt
-                    cell_c.value = img_cnt
-
-    # Обновляем дату сохранения
-    for key in CELL_VALUES.keys():
-        if CELL_VALUES[key] == month:
-            row = int(key[1:]) + 19
-            sheet[f'B{row}'] = datetime.now().strftime("%d-%m-%y %H:%M")
-            break
+        col_pair = RESEARCH_COL_MAP.get(section_name)
+        if col_pair:
+            scan_col, img_col = col_pair
+            sheet[f'{scan_col}{row}'].value = scan_cnt
+            sheet[f'{img_col}{row}'].value = img_cnt
 
     wb.save(file_path)
-
-    for v in values:
-        v[1].value = ''
-        v[2].value = ''
+    clear_fields(None, page)
+    show_info(f'Данные за {date_str} сохранены', page)
 
 
 def add_to_table_values(e, page, date_str):
-    """Сохранить значения в таблицу"""
     if validate_data(date_str=date_str, page=page):
-        month = get_month_from_date(date_str)
-        update_table_values(action='add', month=month)
-        show_info('Значения сохранены', page)
+        save_to_journal(date_str, page)
