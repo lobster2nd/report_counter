@@ -1,9 +1,8 @@
 import flet as ft
 
-from fields import header, values
-from tables import create_table
-from utils import add_to_table_values, rewrite_table_values, \
-    clear_fields
+from fields import values
+# from tables import create_table
+from utils import add_to_table_values, clear_fields
 
 
 def main(page: ft.Page):
@@ -13,49 +12,53 @@ def main(page: ft.Page):
     page.window.height = 900
     page.theme_mode = 'dark'
 
-    create_table()
+    # create_table()
+
+    date_picker = ft.DatePicker(
+        on_change=lambda e: update_date_field(e)
+    )
+    page.overlay.append(date_picker)
+
+    date_field = ft.TextField(
+        label='Дата',
+        hint_text='Выбрать дату',
+        width=200,
+        read_only=True,
+    )
+
+    def update_date_field(e):
+        if date_picker.value:
+            date_field.value = date_picker.value.strftime('%d.%m.%Y')
+            page.update()
+
+    def open_date_picker(e):
+        """Открывает календарь для выбора даты"""
+        page.open(date_picker)
 
     def change_theme(e):
         """Светлая/тёмная тема"""
         page.theme_mode = 'light' if page.theme_mode == 'dark' else 'dark'
         page.update()
 
-    add_btn = ft.ElevatedButton('Прибавить',
+    date_picker_btn = ft.IconButton(
+        icon=ft.icons.CALENDAR_MONTH,
+        on_click=open_date_picker,
+        tooltip='Выбрать дату'
+    )
+
+    save_btn = ft.ElevatedButton('Сохранить',
                                 on_click=lambda e: add_to_table_values(e, page,
-                                                    month=month_dropdown.value)
+                                                    date_field.value)
                                 )
-    rewrite_btn = ft.ElevatedButton('Сохранить новые значения',
-                                    on_click=lambda e: rewrite_table_values(e,
-                                              page, month=month_dropdown.value)
-                                    )
     clear_page_btn = ft.ElevatedButton(text='Очистить',
                                        on_click=lambda e: clear_fields(e, page)
                                        )
     dark_mode_btn = ft.IconButton(ft.icons.SUNNY, on_click=change_theme)
 
-    month_dropdown = ft.Dropdown(
-        label='Месяц',
-        hint_text='Выбрать месяц',
-        options=[
-            ft.dropdown.Option('Январь'),
-            ft.dropdown.Option('Февраль'),
-            ft.dropdown.Option('Март'),
-            ft.dropdown.Option('Апрель'),
-            ft.dropdown.Option('Май'),
-            ft.dropdown.Option('Июнь'),
-            ft.dropdown.Option('Июль'),
-            ft.dropdown.Option('Август'),
-            ft.dropdown.Option('Сентябрь'),
-            ft.dropdown.Option('Октябрь'),
-            ft.dropdown.Option('Ноябрь'),
-            ft.dropdown.Option('Декабрь'),
-        ],
-        autofocus=False
-    )
-
     page.add(
         ft.Row(
-            [month_dropdown], alignment=ft.MainAxisAlignment.CENTER
+            [date_field, date_picker_btn],
+            alignment=ft.MainAxisAlignment.CENTER
         )
     )
 
@@ -70,9 +73,8 @@ def main(page: ft.Page):
             )
         )
 
-    page.add(ft.Row([dark_mode_btn, add_btn, rewrite_btn,
-                     clear_page_btn],
+    page.add(ft.Row([dark_mode_btn, save_btn, clear_page_btn],
                     alignment=ft.MainAxisAlignment.CENTER))
 
 
-ft.app(target=main)
+ft.app(target=main, view=ft.WEB_BROWSER, port=8550)
