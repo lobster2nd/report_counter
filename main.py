@@ -75,7 +75,4 @@ def main(page: ft.Page):
                alignment=ft.MainAxisAlignment.CENTER)
     )
 
-    print("✅ Интерфейс отрисован")
-
-
 ft.app(target=main, view=ft.WEB_BROWSER, port=8550)

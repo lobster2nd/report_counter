@@ -7,7 +7,8 @@ from tables import (
     get_year_file_path,
     get_month_sheet_name,
     create_month_sheet,
-    RESEARCH_COL_MAP
+    RESEARCH_COL_MAP,
+    update_yearly_summary
 )
 
 
@@ -92,6 +93,7 @@ def save_to_journal(date_str, page):
         wb = openpyxl.load_workbook(file_path)
 
     if sheet_name not in wb.sheetnames:
+        from tables import create_month_sheet
         create_month_sheet(wb, year, month_name, month_num)
 
     sheet = wb[sheet_name]
@@ -101,6 +103,8 @@ def save_to_journal(date_str, page):
         show_info(f'Дата {date_str} не найдена в журнале', page)
         return
 
+    # Сохраняем значения
+    data_saved = False
     for val in values:
         section_name = val[0].value
         scan_cnt_str = val[1].value
@@ -109,18 +113,37 @@ def save_to_journal(date_str, page):
         if not scan_cnt_str or not img_cnt_str:
             continue
 
-        scan_cnt = int(scan_cnt_str)
-        img_cnt = int(img_cnt_str)
+        try:
+            scan_cnt = int(scan_cnt_str)
+            img_cnt = int(img_cnt_str)
+        except ValueError:
+            continue
 
         col_pair = RESEARCH_COL_MAP.get(section_name)
         if col_pair:
             scan_col, img_col = col_pair
             sheet[f'{scan_col}{row}'].value = scan_cnt
             sheet[f'{img_col}{row}'].value = img_cnt
+            print(
+                f"✅ Сохранено: {section_name} - иссл:{scan_cnt}, снимки:{img_cnt}")  # Отладка
+            data_saved = True
 
-    wb.save(file_path)
-    clear_fields(None, page)
-    show_info(f'Данные за {date_str} сохранены', page)
+    if data_saved:
+        # Сохраняем файл
+        wb.save(file_path)
+        print(f"✅ Файл сохранен: {file_path}")
+
+        # Перезагружаем файл и обновляем годовой отчет
+        wb = openpyxl.load_workbook(file_path)
+        from tables import create_yearly_summary
+        create_yearly_summary(wb, year)
+        wb.save(file_path)
+        print(f"✅ Годовой отчет обновлен")
+
+        clear_fields(None, page)
+        show_info(f'Данные за {date_str} сохранены', page)
+    else:
+        show_info('Нет данных для сохранения', page)
 
 
 def add_to_table_values(e, page, date_str):
