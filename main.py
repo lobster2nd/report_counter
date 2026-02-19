@@ -5,9 +5,9 @@ from utils import add_to_table_values, clear_fields
 
 def main(page: ft.Page):
     page.title = 'Количество процедур по исследованиям'
-    page.icon = ft.icons.WORK
-    page.window.width = 550
-    page.window.height = 950
+    page.icon = ft.icons.LOCAL_HOSPITAL
+    page.window.width = 650
+    page.window.height = 1050
     page.theme_mode = 'dark'
     page.padding = 20
     page.scroll = ft.ScrollMode.AUTO
@@ -19,10 +19,10 @@ def main(page: ft.Page):
     date_field = ft.TextField(
         label='Дата',
         hint_text='Выбрать дату',
-        width=200,
+        width=250,
         read_only=True,
         border_radius=8,
-        text_size=14,
+        text_size=16,
     )
 
     def update_date_field(e):
@@ -35,7 +35,6 @@ def main(page: ft.Page):
 
     def change_theme(e):
         page.theme_mode = 'light' if page.theme_mode == 'dark' else 'dark'
-        # Обновляем иконку кнопки темы
         theme_btn.icon = ft.icons.SUNNY if page.theme_mode == 'dark' else ft.icons.DARK_MODE
         page.update()
 
@@ -43,7 +42,7 @@ def main(page: ft.Page):
         icon=ft.icons.CALENDAR_MONTH,
         on_click=open_date_picker,
         tooltip='Выбрать дату',
-        icon_size=28,
+        icon_size=32,
     )
 
     # Верхняя панель с датой
@@ -60,12 +59,12 @@ def main(page: ft.Page):
 
     # Контейнер для таблицы с фиксированной шириной
     table_container = ft.Container(
-        width=500,
+        width=600,
         content=ft.Column(
             spacing=2,
             controls=[],
-            scroll=ft.ScrollMode.AUTO,  # Добавляем скролл для таблицы
-            height=600,  # Фиксированная высота для скролла
+            scroll=ft.ScrollMode.AUTO,
+            height=700,
         )
     )
 
@@ -76,41 +75,41 @@ def main(page: ft.Page):
                 ft.Container(
                     content=ft.Text(
                         "Наименование",
-                        size=14,
+                        size=18,
                         weight=ft.FontWeight.BOLD,
                         color=ft.colors.PRIMARY,
                     ),
-                    width=260,
+                    width=300,
                     padding=ft.padding.only(left=15),
                 ),
                 ft.Container(
                     content=ft.Text(
                         "Исследований",
-                        size=14,
+                        size=18,
                         weight=ft.FontWeight.BOLD,
                         color=ft.colors.PRIMARY,
                     ),
-                    width=120,  # Увеличиваем ширину для соответствия
+                    width=150,
                     alignment=ft.alignment.center,
                 ),
                 ft.Container(
                     content=ft.Text(
                         "Снимков",
-                        size=14,
+                        size=18,
                         weight=ft.FontWeight.BOLD,
                         color=ft.colors.PRIMARY,
                     ),
-                    width=120,  # Увеличиваем ширину для соответствия
+                    width=150,
                     alignment=ft.alignment.center,
                 ),
             ],
             alignment=ft.MainAxisAlignment.START,
-            spacing=0,  # Убираем spacing
+            spacing=0,
         ),
         bgcolor=ft.colors.with_opacity(0.1, ft.colors.PRIMARY),
         border_radius=ft.border_radius.only(top_left=8, top_right=8),
-        padding=ft.padding.symmetric(vertical=10, horizontal=0),
-        width=500,
+        padding=ft.padding.symmetric(vertical=12, horizontal=0),
+        width=600,
     )
 
     table_container.content.controls.append(header_row)
@@ -122,25 +121,23 @@ def main(page: ft.Page):
         img_field = value[2]
 
         # Настраиваем поля ввода
-        scan_field.width = 90  # Увеличиваем ширину
-        scan_field.height = 34
+        scan_field.width = 110
+        scan_field.height = 40
         scan_field.text_align = ft.TextAlign.CENTER
         scan_field.border_radius = 6
         scan_field.label = None
         scan_field.hint_text = "0"
-        scan_field.content_padding = ft.padding.symmetric(horizontal=6,
-                                                          vertical=4)
-        scan_field.text_size = 13
+        scan_field.content_padding = ft.padding.symmetric(horizontal=8, vertical=6)
+        scan_field.text_size = 16
 
-        img_field.width = 90  # Увеличиваем ширину
-        img_field.height = 34
+        img_field.width = 110
+        img_field.height = 40
         img_field.text_align = ft.TextAlign.CENTER
         img_field.border_radius = 6
         img_field.label = None
         img_field.hint_text = "0"
-        img_field.content_padding = ft.padding.symmetric(horizontal=6,
-                                                         vertical=4)
-        img_field.text_size = 13
+        img_field.content_padding = ft.padding.symmetric(horizontal=8, vertical=6)
+        img_field.text_size = 16
 
         # Чередование фона для строк
         bg_color = ft.colors.with_opacity(0.03,
@@ -152,29 +149,29 @@ def main(page: ft.Page):
                     ft.Container(
                         content=ft.Text(
                             category_name,
-                            size=13,
+                            size=16,
                             overflow=ft.TextOverflow.ELLIPSIS,
                         ),
-                        width=260,
+                        width=300,
                         padding=ft.padding.only(left=15),
                     ),
                     ft.Container(
                         content=scan_field,
-                        width=120,  # Увеличиваем ширину
+                        width=150,
                         alignment=ft.alignment.center,
                     ),
                     ft.Container(
                         content=img_field,
-                        width=120,  # Увеличиваем ширину
+                        width=150,
                         alignment=ft.alignment.center,
                     ),
                 ],
                 alignment=ft.MainAxisAlignment.START,
-                spacing=0,  # Убираем spacing
+                spacing=0,
             ),
             bgcolor=bg_color,
-            padding=ft.padding.symmetric(vertical=4, horizontal=0),
-            width=500,
+            padding=ft.padding.symmetric(vertical=6, horizontal=0),
+            width=600,
             border_radius=4,
         )
 
@@ -193,7 +190,7 @@ def main(page: ft.Page):
         icon=ft.icons.SUNNY if page.theme_mode == 'dark' else ft.icons.DARK_MODE,
         on_click=change_theme,
         tooltip='Сменить тему',
-        icon_size=22,
+        icon_size=28,
     )
 
     button_row = ft.Row(
@@ -205,7 +202,7 @@ def main(page: ft.Page):
                 icon=ft.icons.SAVE,
                 style=ft.ButtonStyle(
                     shape=ft.RoundedRectangleBorder(radius=6),
-                    padding=ft.padding.symmetric(horizontal=16, vertical=8),
+                    padding=ft.padding.symmetric(horizontal=20, vertical=12),
                 ),
             ),
             ft.ElevatedButton(
@@ -214,20 +211,20 @@ def main(page: ft.Page):
                 icon=ft.icons.CLEAR,
                 style=ft.ButtonStyle(
                     shape=ft.RoundedRectangleBorder(radius=6),
-                    padding=ft.padding.symmetric(horizontal=16, vertical=8),
+                    padding=ft.padding.symmetric(horizontal=20, vertical=12),
                 ),
             ),
             theme_btn,
         ],
         alignment=ft.MainAxisAlignment.CENTER,
-        spacing=12,
+        spacing=15,
     )
 
     # Нижняя панель
     page.add(
         ft.Container(
             content=button_row,
-            margin=ft.margin.only(top=20),
+            margin=ft.margin.only(top=25),
             alignment=ft.alignment.center,
         )
     )
