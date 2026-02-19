@@ -6,8 +6,7 @@ from utils import add_to_table_values, clear_fields
 def main(page: ft.Page):
     page.title = 'Количество процедур по исследованиям'
     page.icon = ft.icons.LOCAL_HOSPITAL
-    page.window.width = 650
-    page.window.height = 1050
+    page.window.maximized = True
     page.theme_mode = 'dark'
     page.padding = 20
     page.scroll = ft.ScrollMode.AUTO
@@ -57,7 +56,7 @@ def main(page: ft.Page):
         )
     )
 
-    # Контейнер для таблицы с фиксированной шириной
+    # Контейнер для таблицы
     table_container = ft.Container(
         width=600,
         content=ft.Column(
@@ -120,26 +119,25 @@ def main(page: ft.Page):
         scan_field = value[1]
         img_field = value[2]
 
-        # Настраиваем поля ввода
+        # Настройка полей
         scan_field.width = 110
         scan_field.height = 40
         scan_field.text_align = ft.TextAlign.CENTER
         scan_field.border_radius = 6
-        scan_field.label = None
-        scan_field.hint_text = "0"
-        scan_field.content_padding = ft.padding.symmetric(horizontal=8, vertical=6)
+        scan_field.content_padding = ft.padding.symmetric(horizontal=8,
+                                                          vertical=6)
         scan_field.text_size = 16
+        scan_field.label_style = ft.TextStyle(size=12, color=ft.colors.GREY)
 
         img_field.width = 110
         img_field.height = 40
         img_field.text_align = ft.TextAlign.CENTER
         img_field.border_radius = 6
-        img_field.label = None
-        img_field.hint_text = "0"
-        img_field.content_padding = ft.padding.symmetric(horizontal=8, vertical=6)
+        img_field.content_padding = ft.padding.symmetric(horizontal=8,
+                                                         vertical=6)
         img_field.text_size = 16
+        img_field.label_style = ft.TextStyle(size=12, color=ft.colors.GREY)
 
-        # Чередование фона для строк
         bg_color = ft.colors.with_opacity(0.03,
                                           ft.colors.PRIMARY) if i % 2 == 0 else None
 
@@ -177,7 +175,6 @@ def main(page: ft.Page):
 
         table_container.content.controls.append(row_container)
 
-    # Добавляем таблицу на страницу
     page.add(
         ft.Container(
             content=table_container,
@@ -185,7 +182,6 @@ def main(page: ft.Page):
         )
     )
 
-    # Кнопки
     theme_btn = ft.IconButton(
         icon=ft.icons.SUNNY if page.theme_mode == 'dark' else ft.icons.DARK_MODE,
         on_click=change_theme,
@@ -220,7 +216,6 @@ def main(page: ft.Page):
         spacing=15,
     )
 
-    # Нижняя панель
     page.add(
         ft.Container(
             content=button_row,
@@ -230,4 +225,4 @@ def main(page: ft.Page):
     )
 
 
-ft.app(target=main, view=ft.WEB_BROWSER, port=8550)
+ft.app(target=main)
