@@ -8,7 +8,7 @@ from fields import values
 RESEARCH_TYPES = [v[0].value for v in values]
 
 COLUMN_CONFIG = {
-    'A': {'name': 'Дата', 'width': 18, 'type': 'date'},  # Увеличена ширина
+    'A': {'name': 'Дата', 'width': 18, 'type': 'date'},
 }
 
 # Начинаем с индекса 1, так как колонка A уже занята
@@ -249,7 +249,7 @@ def create_month_sheet(wb, year: int, month: str, month_num: int):
 
 
 def create_yearly_summary(wb, year: int):
-    """Создает годовой отчет на отдельном листе"""
+    """Создает годовой отчет на отдельном листе с диаграммой"""
     summary_sheet_name = f"Годовой_отчёт_{year}"
 
     # Если лист уже существует, удаляем его и создаем заново
@@ -299,6 +299,7 @@ def create_yearly_summary(wb, year: int):
 
     # Собираем данные по месяцам
     month_totals = {}
+    monthly_data = []
 
     # Инициализируем totals для всех типов исследований из RESEARCH_TYPES
     for research_name in RESEARCH_TYPES:
@@ -308,9 +309,11 @@ def create_yearly_summary(wb, year: int):
     month_totals['Костно-мышечной системы'] = {'scan': 0, 'img': 0}
     month_totals['Черепа и челюстно-лицевой области'] = {'scan': 0, 'img': 0}
 
-    # Проходим по всем месяцам
+    # Проходим по всем месяцам для сбора данных
     for month_num, month_name in enumerate(MONTHS, start=1):
         month_sheet_name = get_month_sheet_name(year, month_name)
+        month_total = 0
+
         if month_sheet_name in wb.sheetnames:
             month_sheet = wb[month_sheet_name]
             days_in_month = get_days_in_month(year, month_num)
@@ -324,16 +327,14 @@ def create_yearly_summary(wb, year: int):
                                                              (None, None))
                     if scan_col and img_col:
                         scan_cell = month_sheet[f'{scan_col}{row}']
-                        img_cell = month_sheet[f'{img_col}{row}']
 
                         if scan_cell.value and isinstance(scan_cell.value,
                                                           (int, float)):
                             month_totals[research_name][
                                 'scan'] += scan_cell.value
-                        if img_cell.value and isinstance(img_cell.value,
-                                                         (int, float)):
-                            month_totals[research_name][
-                                'img'] += img_cell.value
+                            month_total += scan_cell.value
+
+        monthly_data.append(month_total)
 
     # Вычисляем суммы для групп
     # Костно-мышечной системы
@@ -343,15 +344,13 @@ def create_yearly_summary(wb, year: int):
         'Шейные позвонки',
         'Грудные позвонки',
         'Поясничные позвонки',
-        'Рёбра и грудина'  # Единое правильное название
+        'Рёбра и грудина'
     ]
 
     for group in musculoskeletal_groups:
         if group in month_totals:
             month_totals['Костно-мышечной системы']['scan'] += \
             month_totals[group]['scan']
-            month_totals['Костно-мышечной системы']['img'] += \
-            month_totals[group]['img']
 
     # Черепа и челюстно-лицевой области
     skull_groups = [
@@ -365,8 +364,6 @@ def create_yearly_summary(wb, year: int):
         if group in month_totals:
             month_totals['Черепа и челюстно-лицевой области']['scan'] += \
             month_totals[group]['scan']
-            month_totals['Черепа и челюстно-лицевой области']['img'] += \
-            month_totals[group]['img']
 
     # Заполняем данные по категориям
     row = 4
@@ -403,7 +400,7 @@ def create_yearly_summary(wb, year: int):
         'Шейные позвонки',
         'Грудные позвонки',
         'Поясничные позвонки',
-        'Рёбра и грудина',  # Единое правильное название
+        'Рёбра и грудина',
         'Черепа и челюстно-лицевой области',  # Группа (жирным)
         'Зубы',
         'Челюстей',
@@ -434,15 +431,52 @@ def create_yearly_summary(wb, year: int):
 
             row += 1
 
+    # Создаем данные для диаграммы на отдельном листе
+    chart_data_sheet = wb.create_sheet("_chart_data", 1)
+
+    # Заголовки
+    chart_data_sheet['A1'] = 'Месяц'
+    chart_data_sheet['B1'] = 'Количество исследований'
+
+    # Заполняем данные по месяцам
+    for i, (month_name, month_value) in enumerate(zip(MONTHS, monthly_data),
+                                                  start=2):
+        chart_data_sheet[f'A{i}'] = month_name
+        chart_data_sheet[f'B{i}'] = month_value
+
+    # Создаем столбчатую диаграмму
+    from openpyxl.chart import BarChart, Reference
+
+    chart = BarChart()
+    chart.title = f"Количество исследований по месяцам"
+    chart.style = 12
+    chart.y_axis.title = "Количество исследований"
+    chart.height = 9
+    chart.width = 20
+    chart.shape = 4  # Прямоугольные столбцы
+    chart.legend = None
+
+    # Данные для диаграммы
+    data = Reference(chart_data_sheet, min_col=2, min_row=1, max_row=13)
+    categories = Reference(chart_data_sheet, min_col=1, min_row=2, max_row=13)
+
+    chart.add_data(data, titles_from_data=True)
+    chart.set_categories(categories)
+
+    # Добавляем диаграмму на основной лист
+    sheet.add_chart(chart, "E2")
+
+    # Скрываем лист с данными для диаграммы
+    chart_data_sheet.sheet_state = 'hidden'
+
     # Добавляем дату формирования отчета
-    sheet.merge_cells(f'A{row + 2}:C{row + 2}')
-    date_cell = sheet.cell(row=row + 2, column=1)
+    sheet.merge_cells(f'A{row + 4}:C{row + 4}')
+    date_cell = sheet.cell(row=row + 4, column=1)
     date_cell.value = f'Сформировано: {datetime.now().strftime("%d.%m.%Y %H:%M")}'
     date_cell.font = Font(italic=True)
     date_cell.alignment = Alignment(horizontal='right')
 
     return sheet
-
 
 def create_table(year: int = None):
     if year is None:
@@ -465,7 +499,6 @@ def create_table(year: int = None):
     create_yearly_summary(wb, year)
 
     wb.save(file_path)
-    print(f"✅ Файл журнала создан: {file_path}")
     return file_path
 
 

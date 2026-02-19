@@ -124,21 +124,17 @@ def save_to_journal(date_str, page):
             scan_col, img_col = col_pair
             sheet[f'{scan_col}{row}'].value = scan_cnt
             sheet[f'{img_col}{row}'].value = img_cnt
-            print(
-                f"✅ Сохранено: {section_name} - иссл:{scan_cnt}, снимки:{img_cnt}")  # Отладка
             data_saved = True
 
     if data_saved:
         # Сохраняем файл
         wb.save(file_path)
-        print(f"✅ Файл сохранен: {file_path}")
 
         # Перезагружаем файл и обновляем годовой отчет
         wb = openpyxl.load_workbook(file_path)
         from tables import create_yearly_summary
         create_yearly_summary(wb, year)
         wb.save(file_path)
-        print(f"✅ Годовой отчет обновлен")
 
         clear_fields(None, page)
         show_info(f'Данные за {date_str} сохранены', page)
