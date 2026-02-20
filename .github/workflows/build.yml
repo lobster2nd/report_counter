@@ -1,3 +1,27 @@
+name: Build App
+
+on:
+  push:
+    branches: [ "main" ]
+  workflow_dispatch:
+
+jobs:
+  build:
+    runs-on: ${{ matrix.os }}
+    strategy:
+      matrix:
+        os: [windows-latest, ubuntu-latest, macos-latest]
+        include:
+          - os: windows-latest
+            artifact_name: ReportApp-Windows
+            build_target: windows
+          - os: ubuntu-latest
+            artifact_name: ReportApp-Linux
+            build_target: linux
+          - os: macos-latest
+            artifact_name: ReportApp-MacOS
+            build_target: macos
+
     steps:
       - uses: actions/checkout@v4
 
@@ -6,34 +30,15 @@
         with:
           python-version: '3.12'
 
-      - name: Install Flet
+      - name: Install dependencies
         run: |
           python -m pip install --upgrade pip
-          pip install flet flet-cli
+          pip install -r requirements.txt
+          pip install pyinstaller
 
-      - name: Setup Flutter (Windows)
-        if: matrix.os == 'windows-latest'
-        uses: subosito/flutter-action@v2
-        with:
-          flutter-version: '3.24.0'
-          channel: 'stable'
-
-      - name: Setup Flutter (Linux)
-        if: matrix.os == 'ubuntu-latest'
-        uses: subosito/flutter-action@v2
-        with:
-          flutter-version: '3.24.0'
-          channel: 'stable'
-
-      - name: Setup Flutter (macOS)
-        if: matrix.os == 'macos-latest'
-        uses: subosito/flutter-action@v2
-        with:
-          flutter-version: '3.24.0'
-          channel: 'stable'
-
-      - name: Build with Flet
-        run: flet build ${{ matrix.build_target }}
+      - name: Build with PyInstaller
+        run: |
+          pyinstaller --onefile --windowed --name "RentgenReport" main.py
 
       - name: Upload Artifact
         uses: actions/upload-artifact@v4
