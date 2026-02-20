@@ -1,0 +1,49 @@
+name: Build App
+
+on:
+  push:
+    branches: [ "main" ]
+  workflow_dispatch:
+
+jobs:
+  build:
+    runs-on: ${{ matrix.os }}
+    strategy:
+      matrix:
+        os: [windows-latest, ubuntu-latest, macos-latest]
+        include:
+          - os: windows-latest
+            artifact_name: ReportApp-Windows
+            build_target: windows
+          - os: ubuntu-latest
+            artifact_name: ReportApp-Linux
+            build_target: linux
+          - os: macos-latest
+            artifact_name: ReportApp-MacOS
+            build_target: macos
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+
+      - name: Install dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install flet openpyxl
+
+      - name: Build with Flet
+        run: flet build ${{ matrix.build_target }}
+
+      - name: Upload Artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: ${{ matrix.artifact_name }}
+          path: |
+            dist/*.exe
+            dist/*.app
+            dist/*
+          if-no-files-found: error
