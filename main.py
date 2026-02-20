@@ -6,6 +6,7 @@ from utils import add_to_table_values, clear_fields
 def main(page: ft.Page):
     page.title = 'Количество процедур по исследованиям'
     page.icon = ft.icons.LOCAL_HOSPITAL
+    page.window.icon = "icon.ico"
     page.window.maximized = True
     page.theme_mode = 'dark'
     page.padding = 20

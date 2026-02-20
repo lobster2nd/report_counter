@@ -15,12 +15,15 @@ jobs:
           - os: windows-latest
             artifact_name: ReportApp-Windows
             build_target: windows
+            icon_file: icon.ico
           - os: ubuntu-latest
             artifact_name: ReportApp-Linux
             build_target: linux
+            icon_file: icon.ico
           - os: macos-latest
             artifact_name: ReportApp-MacOS
             build_target: macos
+            icon_file: icon.icns
 
     steps:
       - uses: actions/checkout@v4
@@ -38,7 +41,7 @@ jobs:
 
       - name: Build with PyInstaller
         run: |
-          pyinstaller --onefile --windowed --name "Xray_report" main.py
+           pyinstaller --onefile --windowed --name "Xray_report" --icon="${{ matrix.icon_file }}" main.py
 
       - name: Upload Artifact
         uses: actions/upload-artifact@v4
