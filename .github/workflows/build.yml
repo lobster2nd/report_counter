@@ -38,7 +38,7 @@ jobs:
 
       - name: Build with PyInstaller
         run: |
-          pyinstaller --onefile --windowed --name "RentgenReport" main.py
+          pyinstaller --onefile --windowed --name "Xray_report" main.py
 
       - name: Upload Artifact
         uses: actions/upload-artifact@v4

@@ -334,6 +334,9 @@ def create_yearly_summary(wb, year: int):
                                 'scan'] += scan_cell.value
                             month_total += scan_cell.value
 
+                        if img_cell.value and isinstance(img_cell.value, (int, float)):
+                            month_totals[research_name]['img'] += img_cell.value
+
         monthly_data.append(month_total)
 
     # Вычисляем суммы для групп
