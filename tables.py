@@ -327,6 +327,7 @@ def create_yearly_summary(wb, year: int):
                                                              (None, None))
                     if scan_col and img_col:
                         scan_cell = month_sheet[f'{scan_col}{row}']
+                        img_cell = month_sheet[f'{img_col}{row}']
 
                         if scan_cell.value and isinstance(scan_cell.value,
                                                           (int, float)):
