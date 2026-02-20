@@ -355,6 +355,8 @@ def create_yearly_summary(wb, year: int):
         if group in month_totals:
             month_totals['Костно-мышечной системы']['scan'] += \
             month_totals[group]['scan']
+            month_totals['Костно-мышечной системы']['img'] += \
+                month_totals[group]['img']
 
     # Черепа и челюстно-лицевой области
     skull_groups = [
@@ -368,6 +370,8 @@ def create_yearly_summary(wb, year: int):
         if group in month_totals:
             month_totals['Черепа и челюстно-лицевой области']['scan'] += \
             month_totals[group]['scan']
+            month_totals['Черепа и челюстно-лицевой области']['img'] += \
+                month_totals[group]['img']
 
     # Заполняем данные по категориям
     row = 4
